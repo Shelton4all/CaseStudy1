@@ -1,0 +1,70 @@
+---
+title: "Case Study 1"
+output: html_document
+---
+
+##Introduction
+
+The following is a breif overview of two datasets called, "Breweries" and "Beers". Several models have been run through the combination or individual datasets. The goal is to see trends and patterns possible within the data given. The data at our disposal is data containing a list of craft beers and breweries across the US and their subsequent details.
+
+##Questions
+
+The following code will log both of the datasets and get a visual of how the data is structured and what we are dealing with from a size perpective. This shows that the data is a data.frame which is the default class in R (when importing .csv files).
+```{r}
+library(readr)
+Beers <- read.csv("~/Documents/Doing Data Science/Case Study 1/Beers.csv")
+View(Beers)
+library(readr)
+Breweries <- read.csv("~/Documents/Doing Data Science/Case Study 1/Breweries.csv")
+View(Breweries)
+```
+
+The below code gives us the number of Breweries in each state across the US. This will let us identify any outliers from a statewide perspective to see where trends could be identified geographically. 
+```{r}
+table(Breweries$State)
+```
+
+This gives us the a merged copy of data (combining the Beer and Breweries datasets) and we have givent each row a unique identifier of Brew_ID. This combined ID will help us manipulate the data and check the merged data for overarching trends and patterns. 
+```{r}
+names(Breweries)
+names(Beers)
+colnames(Beers)[5] <- "Brew_ID"
+names(Beers)
+Brew_Merge <- merge(x = Beers, y = Breweries, by = "Brew_ID", all = TRUE)
+head(Brew_Merge)
+```
+
+In doing the above manipulation of the datasets we must sift through the data and ignore the unavailable or data points that read "NA" in order to get an accurate idea of how patterns can be developed with the real (and available) data.
+```{r}
+sum(is.na(Brew_Merge))
+```
+
+The below code creates a new variable and runs an aggregate function to find the median number of ABV and IBU by state. 
+```{r}
+Brew_by_State <- aggregate(Brew_Merge[, 4:5], list(Brew_Merge$State), median)
+Brew_by_State
+```
+
+This code aggregates the mean ABV and IBU numbers by state and then we want to find the state with both the highest IBU and ABV numbers which happens to be Wyoming. 
+```{r}
+Brew_No_NA <- na.omit(Brew_Merge)
+Brew_No_NA
+Brew_Mean_State <- aggregate(na.omit(Brew_No_NA[4:5]), list(Brew_No_NA$State), mean)
+Brew_Mean_State
+Col_Max <- function(Brew_Mean_State) sapply(Brew_Mean_State, max, na.rm = TRUE)
+Col_Max(Brew_Mean_State)
+```
+
+The summary of data below gives us the ABV numbers be state. This also gives us a general idea of how we need to read the data. 
+```{r}
+summary(Brew_Mean_State$ABV)
+```
+
+Below we see a scatter plot with a few outliers, however, for the most part we see a graph with positive linear regression. The evidence here would suggest that as the ABV increases, the IBU would also increase. This would lead us to believe that these two datapoints (columns) are correlated. 
+```{r}
+plot(x = Brew_Mean_State$ABV, y = Brew_Mean_State$IBU)
+```
+
+##Conclusion
+
+By running through several models we are able to determine that there is at least one possible trend, which could open up the possibility for for patterns as we take a deeper dive into the two datasets. 
